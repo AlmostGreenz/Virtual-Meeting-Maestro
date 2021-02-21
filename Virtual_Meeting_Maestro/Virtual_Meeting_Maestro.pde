@@ -13,10 +13,15 @@ VMMSystemAdapter vmmSystem;
 
 PImage logo;
 
+/**
+  *  Sets up the canvas and the objects that the program depends on to run.
+  **/
 void setup() {
   size(600, 800);
   noStroke();
+  frameRate(30); // limit framerate to 30 frames per second to reduce impact on system
   
+  // Button configuration
   cp5 = new ControlP5(this);
   
   cp5.addButton("remove")
@@ -77,14 +82,20 @@ void setup() {
       .setColorBackground(color(0, 145, 145))
       .setColorActive(color(0, 185, 185));
   
+  // Loads in logo to be drawn on menu
   logo = loadImage("logo.png");
   imageMode(CENTER);
   
+  // Instantiate an instance of UiBooster which assists with window design
   booster = new UiBooster();
   
+  // Instantiate an instance of VMMSystemAdapter, a class that adapts the VMMSystem class to work with Processing
   vmmSystem = new VMMSystemAdapter();
 }
 
+/**
+  * Draws the frames to the screen.
+  **/
 void draw() {
   background(10);
   textAlign(CENTER, CENTER);
@@ -92,21 +103,37 @@ void draw() {
   image(logo, width/2, 145);
 }
 
+/**
+  * Display all scheduled meetings in a window.
+  * @param value integer representing the state of the button (handled by the library)
+  **/
 public void viewall(int value){
   // activated by the button
   displayMeetings('a');
 }
 
+/**
+  * Display scheduled meetings that have passed (occured prior to today) in a window.
+  * @param value integer representing the state of the button (handled by the library)
+  **/
 public void viewPast(int value){
   // activated by the button
   displayMeetings('p');
 }
 
+/**
+  * Display all upcoming (happening today or in the future) scheduled meetings in a window.
+  * @param value integer representing the state of the button (handled by the library)
+  **/
 public void viewUpcoming(int value){
   // activated by the button
   displayMeetings('u');
 }
 
+/**
+  * Display to the user the meetings specified by status.
+  * @param status a character representing which meetings to display, with 'a' being all, 'u' being upcoming, and 'p' being previous
+  **/
 private void displayMeetings(char status) {
   if (millis() > 500) {
     String title;
@@ -141,6 +168,7 @@ private void displayMeetings(char status) {
         count++;
     }
     
+    // Display the meetings
     new UiBooster().showTableImmutable(
         meetingsFormatted,
         Arrays.asList("ID", "Name", "Description", "Date & Time", "URL"),
@@ -148,6 +176,11 @@ private void displayMeetings(char status) {
   }
 }
 
+/**
+  * Get the ID of the meeting specified by the user.
+  * @param title the title of the prompt to the user
+  * @param prompt the text of the prompt to the user
+  **/
 private String getIdFromUser(String title, String prompt) {
   ArrayList<String> meetingsFormatted = new ArrayList<String>();
     
@@ -162,6 +195,7 @@ private String getIdFromUser(String title, String prompt) {
   
   String selection;
   
+  // Display the meeting options to the user
   if (meetingsFormatted.size() > 0) {
     selection = new UiBooster().showSelectionDialog(
           prompt,
@@ -178,14 +212,20 @@ private String getIdFromUser(String title, String prompt) {
     return null;
   }
   
-  int index = Integer.parseInt(selection.substring(0, selection.indexOf(" | "))) - 1;
+  int index = Integer.parseInt(selection.substring(0, selection.indexOf(" | "))) - 1; // find the index of the meeting in meetingData
   
   return meetingData.get(index).get("id");
 }
 
+/**
+  * Display all meetings, allow the user to select one, then let them view its information and either go back to the menu,
+  *        repeat the meeting, or go to the URL associated with the meeting.
+  * @param value integer representing the state of the button (handled by the library)
+  **/
 public void viewMeeting(int value) {
   // activated by the button
   if (millis() > 500) {
+    // Display all meetings as ask for a selection of which one to view
     String meetingId = getIdFromUser("Select Meeting", "Select which meeting to view:");
     
     if (meetingId == null) {
@@ -198,6 +238,7 @@ public void viewMeeting(int value) {
       return;
     }
     
+    // Display selected meeting's information
     String input = (String) JOptionPane.showInputDialog(
                     null,
                     String.format("Description: %s\nDate/Time %s", meetingData.get("description"), meetingData.get("time"))
@@ -210,15 +251,18 @@ public void viewMeeting(int value) {
                     meetingData.get("url"));
                     
     if (input != null && "repeat".equals(input)) {
-      vmmSystem.repeatMeeting(meetingId);
+      vmmSystem.repeatMeeting(meetingId); // repeat meeting's scheduling if requested
     }
     else if (input != null) {
-      link(meetingData.get("url"));
+      link(meetingData.get("url")); // redirect user to meeting's URL if requested
     }
   }
 }
 
-
+/**
+  * Initiate the process to add an event.
+  * @param value integer representing the state of the button (handled by the library)
+  **/
 public void add(int value){
   // activated by the button
   if (millis() > 500) {
@@ -226,15 +270,19 @@ public void add(int value){
   }
 }
 
+/**
+  * Remove an event from the schedule (if user decides so).
+  * @param value integer representing the state of the button (handled by the library)
+  **/
 public void remove(int value){
   // activated by the button
   if (millis() > 500) {
-    String meetingId = getIdFromUser("Remove Meeting?", "Select which meeting to remove:");
+    String meetingId = getIdFromUser("Remove Meeting?", "Select which meeting to remove:"); // request selection of meeting from user
     
     if (meetingId == null) {
       return;
     }
     
-    vmmSystem.removeMeeting(meetingId);
+    vmmSystem.removeMeeting(meetingId); // remove meeting specified
   }
 }
