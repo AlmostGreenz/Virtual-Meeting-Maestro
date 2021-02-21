@@ -41,6 +41,7 @@ public abstract class VMMSystem {
      */
     public void removeMeeting(String meetingId) {
         meetingManager.removeMeeting(meetingId);
+        saveToFile();
     }
     
     /**
